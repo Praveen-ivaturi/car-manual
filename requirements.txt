@@ -300,7 +300,7 @@ websocket-client==1.8.0
 websockets==12.0
 Werkzeug==3.0.3
 wheel==0.43.0
-openai-whisper @ git+https://github.com/openai/whisper.git@ba3f3cd54b0e5b8ce1ab3de13e32122d0d5f98ab
+openai-whisper
 wrapt==1.16.0
 xgboost==2.0.3
 yarl==1.9.4
