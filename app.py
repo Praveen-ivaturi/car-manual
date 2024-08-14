@@ -6,10 +6,9 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from langchain_community.vectorstores import FAISS
 from dotenv import load_dotenv
-import whisper
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-app = Flask(__name__)
+app = Flask(_name_)
 CORS(app)  # Enable CORS
 
 # Load environment variables from .env file
@@ -17,9 +16,6 @@ load_dotenv()
 
 # Retrieve the OpenAI API key from environment variables
 openai_api_key = os.getenv('OPENAI_API_KEY')
-
-# Initialize Whisper model
-whisper_model = whisper.load_model("small")
 
 # Define the prompt template for the QA chain
 # prompt_template = """
@@ -56,45 +52,45 @@ def is_car_related(question):
 
 def answer(question):
     print(f"Question: {question}")
-    
+
     # Log the type and contents of vectorstore
     print(f"Vectorstore type: {type(vectorstore)}")
-    
-    # Perform similarity search
-    try:
-        relevant_docs = vectorstore.similarity_search(question)
-        print(f"Relevant Docs: {relevant_docs}")
-    except Exception as e:
-        print(f"Error during similarity search: {e}")
-    
-    if not relevant_docs:
-        print("No relevant documents found.")
-    
-    context = ""
-    relevant_images = []
-    for d in relevant_docs:
-        print(f"Document: {d}")
-        if d.metadata.get('type') == 'text':
-            context += '[text]' + d.metadata.get('original_content', '')
-        elif d.metadata.get('type') == 'table':
-            context += '[table]' + d.metadata.get('original_content', '')
-        elif d.metadata.get('type') == 'image':
-            context += '[image]' + d.page_content
-            image_data = d.metadata.get('original_content', '')
-            if image_data:
-                print(f"Encoding image data for {d.metadata}")
-                relevant_images.append(image_data)
-    
-    print(f"Context: {context}")
-    result = llm(prompt.format(context=context, question=question))
-    print(f"Result: {result}")
-    result_text = result.content if hasattr(result, 'content') else str(result)
-    return result_text, relevant_images
 
+    # Perform similarity search if the question is car-related
+    if is_car_related(question):
+        try:
+            relevant_docs = vectorstore.similarity_search(question)
+            print(f"Relevant Docs: {relevant_docs}")
+        except Exception as e:
+            print(f"Error during similarity search: {e}")
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+        if not relevant_docs:
+            print("No relevant documents found.")
+        
+        context = ""
+        relevant_images = []
+        for d in relevant_docs:
+            print(f"Document: {d}")
+            if d.metadata.get('type') == 'text':
+                context += '[text]' + d.metadata.get('original_content', '')
+            elif d.metadata.get('type') == 'table':
+                context += '[table]' + d.metadata.get('original_content', '')
+            elif d.metadata.get('type') == 'image':
+                context += '[image]' + d.page_content
+                image_data = d.metadata.get('original_content', '')
+                if image_data:
+                    print(f"Encoding image data for {d.metadata}")
+                    relevant_images.append(image_data)
+
+        print(f"Context: {context}")
+        result = llm(prompt.format(context=context, question=question))
+        print(f"Result: {result}")
+        result_text = result.content if hasattr(result, 'content') else str(result)
+        return result_text, relevant_images
+    else:
+        # If not car-related, provide a generic response and no images
+        result_text = "Hello! How can I assist you with vehicle maintenance today?"
+        return result_text, []  # No images for non-car-related questions
 
 @app.route('/ask', methods=['POST'])
 def ask():
@@ -115,23 +111,6 @@ def ask():
     
     print(f"Response: {response}")  # Log the response
     return jsonify(response)
-
-@app.route('/transcribe', methods=['POST'])
-def transcribe():
-    file = request.files.get('audio')
-    if not file:
-        return jsonify({'error': 'No audio file provided'}), 400
     
-    # Transcribe the audio file using Whisper
-    audio_path = 'temp_audio.wav'
-    file.save(audio_path)
-    
-    # Load the audio file and transcribe
-    result = whisper_model.transcribe(audio_path)
-    os.remove(audio_path)
-    
-    print(f"Transcription: {result['text']}")  # Log the transcription result
-    return jsonify({'transcription': result['text']})
-
-if __name__ == '__main__':
+if _name_ == '_main_':
     app.run(debug=True)
