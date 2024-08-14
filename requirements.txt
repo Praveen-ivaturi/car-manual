@@ -52,7 +52,6 @@ faiss-cpu==1.8.0.post1
 fastapi==0.111.0
 fastapi-cli==0.0.4
 fastjsonschema==2.20.0
-ffmpeg-python==0.2.0
 filelock==3.15.1
 firebase-admin==6.5.0
 fitz==0.0.1.dev2
@@ -300,7 +299,6 @@ websocket-client==1.8.0
 websockets==12.0
 Werkzeug==3.0.3
 wheel==0.43.0
-openai-whisper
 wrapt==1.16.0
 xgboost==2.0.3
 yarl==1.9.4
