@@ -8,7 +8,7 @@ from langchain_community.vectorstores import FAISS
 from dotenv import load_dotenv
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-app = Flask(_name_)
+app = Flask(__name__)
 CORS(app)  # Enable CORS
 
 # Load environment variables from .env file
@@ -112,5 +112,5 @@ def ask():
     print(f"Response: {response}")  # Log the response
     return jsonify(response)
     
-if _name_ == '_main_':
+if __name__ == '__main__':
     app.run(debug=True)
