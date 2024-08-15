@@ -17,19 +17,29 @@ load_dotenv()
 # Retrieve the OpenAI API key from environment variables
 openai_api_key = os.getenv('OPENAI_API_KEY')
 
-# Define the prompt template for the QA chain
+# prompt_template = """
+# You are a car manual expert and highly knowledgeable about vehicle maintenance and operation.
+# Based on the following excerpt from a car manual, diagrams, and tables:
+# {context}
+# Question: {question}
+# If the question is a general greeting or a non-vehicle related statement, respond with "Hello! How can I assist you with vehicle maintenance today?"
+# If the information is not available or the question is outside the context of vehicle maintenance, respond with "Sorry, I don't have much information about it."
+# Provide a detailed and informative answer based on the context provided if the question is related to vehicle maintenance and operation.
+# Answer:
+# """
+
 prompt_template = """
 You are a car manual expert and highly knowledgeable about vehicle maintenance and operation.
 Based on the following excerpt from a car manual, diagrams, and tables:
 {context}
 Question: {question}
-If the question is a general greeting like "hello" or any type of greetings, respond with "Hello, How can I assist you on vehicle maintenance."
+If the question is a general greeting or any type of greetings, respond with "Hello, How can I assist you on vehicle maintenance."
 If the question is not a greeting do not add "Hello, How can I assist you on vehicle maintenance."
 If the information is not available in the manual but is related to cars/vehicles, provide a detailed and informative answer. Include images if necessary.
 For long answers, present the information in bullet points with side headings neatly presented.
 If the question is outside the context of vehicle maintenance, respond with "Sorry, I don't have much information about it."
 If the question is related to the PDF content, provide the answer strictly from the PDF without any extra information.
-Answer in bullet points:
+Answer:
 """
 
 
@@ -80,27 +90,12 @@ def answer(question):
     result = llm(prompt.format(context=context, question=question))
     print(f"Result: {result}")
     result_text = result.content if hasattr(result, 'content') else str(result)
-    
-    # Process result_text to format as bullet points
-    bullet_points = result_text.split('\n')
-    formatted_result = '<ul>'
-    for point in bullet_points:
-        if point.strip():
-            formatted_result += f'<li>{point.strip()}</li>'
-    formatted_result += '</ul>'
-    
-    if relevant_docs:
-        # Include images if the question is car-related
-        if is_car_related(question):
-            return formatted_result, relevant_images
-        else:
-            return formatted_result, []
-    else:
-        # Provide additional information and include images if not found in the PDF but car-related
-        if is_car_related(question):
-            return formatted_result, relevant_images
-
-    return "Sorry, I don't have much information about it.", []
+    # Determine the response based on the result_text
+    if "Sorry, I don't have much information about it." in result_text:
+        return result_text, []
+    if "Hello, How can I assist you on vehicle maintenance?" in result_text:
+        return result_text, []
+    return result_text, relevant_images
 
 @app.route('/ask', methods=['POST'])
 def ask():
@@ -110,10 +105,11 @@ def ask():
     if not question:
         return jsonify({'error': 'No question provided'}), 400
     
+    # Temporarily bypass car-related keyword filtering for testing
+    # if is_car_related(question):
     result, relevant_images = answer(question)
     response = {'answer': result}
     
-    # Always add images if they are relevant and the question is car-related
     if relevant_images:
         print(f"Adding images to response: {relevant_images}")  # Log images being added to response
         response['images'] = relevant_images
